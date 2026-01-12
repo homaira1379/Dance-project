@@ -42,7 +42,7 @@ export default function OwnerTrainersTab() {
     email: "",
     first_name: "",
     last_name: "",
-    password: "password123",
+    password: "password123", // keep default, but do NOT display it
   });
 
   const selectedStudio = useMemo(
@@ -78,10 +78,11 @@ export default function OwnerTrainersTab() {
 
   useEffect(() => {
     if (!studioUuid) return;
+
     setLoading(true);
     setError(null);
-    listStudioTrainers(studioUuid)
-      .then((t) => setTrainers(t))
+
+    loadTrainers(studioUuid)
       .catch((e) => setError(humanizeApiError(e) || "Failed to load trainers."))
       .finally(() => setLoading(false));
   }, [studioUuid]);
@@ -99,10 +100,17 @@ export default function OwnerTrainersTab() {
         email: form.email.trim() || undefined,
         first_name: form.first_name.trim() || undefined,
         last_name: form.last_name.trim() || undefined,
-        password: form.password,
+        password: form.password || "password123",
       });
 
-      setForm({ username: "", email: "", first_name: "", last_name: "", password: "password123" });
+      setForm({
+        username: "",
+        email: "",
+        first_name: "",
+        last_name: "",
+        password: "password123",
+      });
+
       await loadTrainers(studioUuid);
     } catch (e: any) {
       setError(humanizeApiError(e) || "Failed to add trainer.");
@@ -136,12 +144,17 @@ export default function OwnerTrainersTab() {
       )}
 
       <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-6">
-        <div className="text-xs uppercase tracking-widest text-gray-500">Owner</div>
+        <div className="text-xs uppercase tracking-widest text-gray-500">
+          Owner
+        </div>
         <h3 className="text-2xl font-extrabold text-gray-900 mt-1">Trainers</h3>
         <p className="text-gray-600 mt-2">Add trainers to your studio.</p>
 
         <div className="mt-6">
-          <label className="block text-sm font-semibold text-gray-800 mb-2">Select Studio</label>
+          <label className="block text-sm font-semibold text-gray-800 mb-2">
+            Select Studio
+          </label>
+
           <select
             value={studioUuid}
             onChange={(e) => setStudioUuid(e.target.value)}
@@ -160,13 +173,14 @@ export default function OwnerTrainersTab() {
 
           {selectedStudio && (
             <div className="mt-2 text-xs text-gray-500">
-              Studio UUID: <span className="font-mono">{selectedStudio.uuid}</span>
+              Studio UUID:{" "}
+              <span className="font-mono">{selectedStudio.uuid}</span>
             </div>
           )}
         </div>
 
         <div className="mt-6 rounded-2xl border border-gray-200 p-4">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
             <input
               value={form.username}
               onChange={(e) => setForm((p) => ({ ...p, username: e.target.value }))}
@@ -191,6 +205,16 @@ export default function OwnerTrainersTab() {
               placeholder="last name"
               className="rounded-xl border border-gray-200 px-4 py-3 outline-none focus:border-orange-400"
             />
+
+            {/* Optional password input (hidden by default but editable if needed) */}
+            <input
+              type="password"
+              value={form.password}
+              onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
+              placeholder="password (default: password123)"
+              className="rounded-xl border border-gray-200 px-4 py-3 outline-none focus:border-orange-400"
+            />
+
             <button
               onClick={onAdd}
               disabled={busy === "add" || !form.username.trim() || !studioUuid}
@@ -202,7 +226,7 @@ export default function OwnerTrainersTab() {
           </div>
 
           <div className="mt-3 text-xs text-gray-500">
-            Default password used: <span className="font-mono">{form.password}</span>
+            Note: password is hidden for security (teacher-friendly).
           </div>
         </div>
 
@@ -229,7 +253,9 @@ export default function OwnerTrainersTab() {
                         ? `${t.first_name ?? ""} ${t.last_name ?? ""}`.trim()
                         : t.username}
                     </div>
-                    <div className="text-sm text-gray-600">{t.email || t.username}</div>
+                    <div className="text-sm text-gray-600">
+                      {t.email || t.username}
+                    </div>
                   </div>
 
                   <button

@@ -4,6 +4,13 @@ import { apiFetch } from "./apiFetch";
 export type Studio = {
   uuid: string;
   name: string;
+
+  // optional extras (if backend provides them)
+  city?: string;
+  address?: string;
+  two_gis_url?: string;
+  instagram_username?: string;
+  instagram_url?: string;
 };
 
 export type Trainer = {
@@ -47,18 +54,36 @@ export type Booking = {
 };
 
 type Paginated<T> = {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: T[];
+  count?: number;
+  next?: string | null;
+  previous?: string | null;
+  results?: T[];
 };
+
+// ==================== BACKEND PATHS ====================
+// According to backend index (/api/v1/studios/) the real resources are:
+const STUDIOS_BASE = "/api/v1/studios";
+const STUDIOS_LIST = `${STUDIOS_BASE}/studios/`;
+const TRAINERS_LINKS = `${STUDIOS_BASE}/trainers/`;
+const SLOTS = `${STUDIOS_BASE}/slots/`;
+const BOOKINGS = `${STUDIOS_BASE}/bookings/`;
 
 // -------------------- STUDIOS --------------------
 export async function listOwnerStudios(): Promise<Studio[]> {
-  const res = await apiFetch<Paginated<any>>("/api/v1/studios/");
-  return (res.results || []).map((s) => ({
+  // ✅ FIX: was "/api/v1/studios/" (index), must be "/api/v1/studios/studios/"
+  const res = await apiFetch<Paginated<any>>(STUDIOS_LIST);
+
+  const rows = res?.results ?? [];
+  return rows.map((s: any) => ({
     uuid: s.uuid,
     name: s.name,
+
+    // optional fields if backend returns them
+    city: s.city,
+    address: s.address,
+    two_gis_url: s.two_gis_url,
+    instagram_username: s.instagram_username,
+    instagram_url: s.instagram_url,
   }));
 }
 
@@ -68,6 +93,9 @@ export async function myStudios(): Promise<Studio[]> {
 }
 
 // -------------------- TRAINERS --------------------
+// IMPORTANT:
+// Many backends do NOT allow creating trainer users from owner UI.
+// If your backend supports it, keep it. If not, your backend friend will adjust.
 export async function createTrainerUser(payload: {
   username: string;
   email?: string;
@@ -75,14 +103,16 @@ export async function createTrainerUser(payload: {
   last_name?: string;
   password: string;
 }): Promise<Trainer> {
-  return apiFetch<Trainer>("/api/v1/trainers/", {
+  // ✅ FIX: backend index suggests trainers resource is /api/v1/studios/trainers/
+  return apiFetch<Trainer>(TRAINERS_LINKS, {
     method: "POST",
     body: payload,
   });
 }
 
 export async function linkTrainerToStudio(studioUuid: string, trainerUuid: string) {
-  return apiFetch("/api/v1/studios/trainers/", {
+  // Some backends link trainer-to-studio by POSTing {studio, trainer} to same endpoint
+  return apiFetch(TRAINERS_LINKS, {
     method: "POST",
     body: { studio: studioUuid, trainer: trainerUuid },
   });
@@ -99,16 +129,19 @@ export async function addTrainerToStudio(
   }
 ) {
   const trainer = await createTrainerUser(payload);
+  // If backend already links trainer to studio on creation, this might be redundant — but safe
   await linkTrainerToStudio(studioUuid, trainer.uuid);
   return trainer;
 }
 
 export async function listStudioTrainers(studioUuid: string): Promise<Trainer[]> {
+  // ✅ FIX: trainers are under /api/v1/studios/trainers/
   const res = await apiFetch<Paginated<any>>(
-    `/api/v1/studios/trainers/?studio=${encodeURIComponent(studioUuid)}`
+    `${TRAINERS_LINKS}?studio=${encodeURIComponent(studioUuid)}`
   );
 
-  return (res.results || []).map((row) => {
+  return (res.results ?? []).map((row: any) => {
+    // Backend may return either {trainer: {...}} or trainer object directly
     const t = row.trainer ?? row;
     return {
       uuid: t.uuid,
@@ -121,13 +154,15 @@ export async function listStudioTrainers(studioUuid: string): Promise<Trainer[]>
 }
 
 export async function removeTrainerFromStudio(studioUuid: string, trainerUuid: string) {
+  // Different backends delete differently — keep fallback logic
   try {
-    return await apiFetch("/api/v1/studios/trainers/remove/", {
+    return await apiFetch(`${TRAINERS_LINKS}remove/`, {
       method: "POST",
       body: { studio: studioUuid, trainer: trainerUuid },
     });
   } catch {
-    return apiFetch(`/api/v1/studios/trainers/${encodeURIComponent(trainerUuid)}/`, {
+    // try DELETE a specific relation or trainer record
+    return apiFetch(`${TRAINERS_LINKS}${encodeURIComponent(trainerUuid)}/`, {
       method: "DELETE",
     });
   }
@@ -158,20 +193,22 @@ export async function removeTrainer(studioUuid: string, trainerUuid: string) {
 
 // -------------------- SLOTS --------------------
 export async function listSlots(params?: { studio?: string }) {
+  // ✅ FIX: slots are under /api/v1/studios/slots/
   const qs = params?.studio ? `?studio=${encodeURIComponent(params.studio)}` : "";
-  const res = await apiFetch<{ results: Slot[] }>(`/api/v1/appointment-slots/${qs}`);
-  return res.results || [];
+  const res = await apiFetch<Paginated<Slot>>(`${SLOTS}${qs}`);
+  return res.results ?? [];
 }
 
 export async function createSlot(payload: {
   studio: string;
-  trainer?: string; // ✅ OPTIONAL (important!)
+  trainer?: string; // optional
   title: string;
   start_time: string;
   end_time: string;
   price?: number;
 }) {
-  return apiFetch<Slot>(`/api/v1/appointment-slots/`, {
+  // ✅ FIX: create slot at /api/v1/studios/slots/
+  return apiFetch<Slot>(SLOTS, {
     method: "POST",
     body: payload,
   });
@@ -179,7 +216,8 @@ export async function createSlot(payload: {
 
 // -------------------- BOOKINGS --------------------
 export async function listBookings(params?: { studio?: string }) {
+  // ✅ FIX: bookings are under /api/v1/studios/bookings/
   const qs = params?.studio ? `?studio=${encodeURIComponent(params.studio)}` : "";
-  const res = await apiFetch<{ results: Booking[] }>(`/api/v1/bookings/${qs}`);
-  return res.results || [];
+  const res = await apiFetch<Paginated<Booking>>(`${BOOKINGS}${qs}`);
+  return res.results ?? [];
 }

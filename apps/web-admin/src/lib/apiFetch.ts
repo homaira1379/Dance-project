@@ -1,4 +1,5 @@
 // apps/web-admin/src/lib/apiFetch.ts
+
 type ApiFetchOptions = {
   method?: string;
   body?: any;
@@ -13,8 +14,9 @@ function joinUrl(base: string, path: string) {
   return base + path;
 }
 
-export async function apiFetch<T = any>(path: string, options: ApiFetchOptions = {}): Promise<T> {
-  const base = process.env.NEXT_PUBLIC_API_BASE_URL || "";
+export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {
+  // ✅ Default to deployed backend if env is missing
+  const base = process.env.NEXT_PUBLIC_API_BASE_URL || "https://dance.arlidi.dev";
   const url = joinUrl(base, path);
 
   const headers: Record<string, string> = {
@@ -26,7 +28,8 @@ export async function apiFetch<T = any>(path: string, options: ApiFetchOptions =
     method: options.method || "GET",
     headers,
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
-    credentials: "include",
+    credentials: "include", // ✅ REQUIRED for Django session auth
+    cache: "no-store",
   });
 
   let data: any = null;

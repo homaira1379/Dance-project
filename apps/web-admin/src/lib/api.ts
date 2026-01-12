@@ -1,9 +1,10 @@
 import axios from "axios";
 
-// ✅ Backend host comes from env
-const API_HOST = process.env.NEXT_PUBLIC_API_URL || "https://dance.arlidi.dev";
+// ✅ Use ONE env var everywhere
+const API_HOST =
+  process.env.NEXT_PUBLIC_API_BASE_URL || "https://dance.arlidi.dev";
 
-// ✅ Backend base is: https://dance.arlidi.dev/api/v1/
+// ✅ Backend base is: https://dance.arlidi.dev/api/v1
 const API_BASE_URL = `${API_HOST.replace(/\/$/, "")}/api/v1`;
 
 // Token storage keys
@@ -20,13 +21,12 @@ export function getTokens(): { access?: string; refresh?: string } {
 
 /**
  * ✅ Compatibility export
- * Needed because bookings.ts imports getStoredTokens
+ * Needed because some files import getStoredTokens
  */
 export function getStoredTokens(): { access?: string; refresh?: string } {
   return getTokens();
 }
 
-/** Optional helper */
 export function getAccessToken(): string | undefined {
   return getTokens().access;
 }
@@ -46,13 +46,14 @@ export function clearTokens() {
 // ✅ Axios instance
 export const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-  withCredentials: false,
+  headers: { "Content-Type": "application/json" },
+
+  // ✅ IMPORTANT if backend uses cookies/session auth
+  // (Even if you also use Bearer tokens, this doesn't hurt.)
+  withCredentials: true,
 });
 
-// ✅ Attach access token to every request
+// ✅ Attach access token to every request (for JWT setups)
 api.interceptors.request.use((config) => {
   const { access } = getTokens();
   if (access) {
@@ -103,17 +104,18 @@ api.interceptors.response.use(
     }
 
     isRefreshing = true;
-
     try {
-      // ✅ CORRECT refresh endpoint for your backend
+      // ✅ Refresh endpoint
       const refreshRes = await axios.post(
         `${API_BASE_URL}/auth/refresh/`,
         { refresh },
-        { headers: { "Content-Type": "application/json" } }
+        {
+          headers: { "Content-Type": "application/json" },
+          withCredentials: true, // ✅ keep consistent
+        }
       );
 
       const newTokens = refreshRes.data as { access: string; refresh?: string };
-
       const finalTokens = {
         access: newTokens.access,
         refresh: newTokens.refresh || refresh,

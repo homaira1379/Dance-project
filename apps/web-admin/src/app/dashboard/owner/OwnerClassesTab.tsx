@@ -54,21 +54,38 @@ export default function OwnerClassesTab() {
     [studios, studioId]
   );
 
+  // Map trainers by id (so we can show trainer name inside slot list)
+  const trainerById = useMemo(() => {
+    const m: Record<string, Trainer> = {};
+    trainers.forEach((t) => (m[t.uuid] = t));
+    return m;
+  }, [trainers]);
+
   const loadBase = async () => {
-    const [s, t] = await Promise.all([myStudios(), listTrainers(studioId || "")]);
+    const s = await myStudios();
     setStudios(s);
-    setTrainers(t);
+
     const first = s[0]?.uuid || "";
     setStudioId((prev) => prev || first);
+
+    // Load trainers for the initial studio (if exists)
+    const initialStudio = studioId || first || "";
+    const t = initialStudio ? await listTrainers(initialStudio) : [];
+    setTrainers(t);
+
     return { s, t, first };
   };
 
   const loadStudioData = async (sid: string) => {
-    const [sl, b] = await Promise.all([listSlots({ studio: sid }), listBookings({ studio: sid })]);
+    const [sl, b] = await Promise.all([
+      listSlots({ studio: sid }),
+      listBookings({ studio: sid }),
+    ]);
     setSlots(sl);
     setBookings(b);
   };
 
+  // Initial load
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -86,11 +103,18 @@ export default function OwnerClassesTab() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // When studio changes, reload slots/bookings AND trainers for that studio ✅
   useEffect(() => {
     if (!studioId) return;
+
     setLoading(true);
     setError(null);
-    loadStudioData(studioId)
+
+    Promise.all([
+      loadStudioData(studioId),
+      listTrainers(studioId),
+    ])
+      .then(([, t]) => setTrainers(t))
       .catch((e: any) => setError(e?.message || "Failed to load studio data."))
       .finally(() => setLoading(false));
   }, [studioId]);
@@ -99,7 +123,8 @@ export default function OwnerClassesTab() {
     setError(null);
 
     if (!studioId) return setError("Select a studio first.");
-    if (!form.start_time || !form.end_time) return setError("Start time and end time are required.");
+    if (!form.start_time || !form.end_time)
+      return setError("Start time and end time are required.");
 
     const startISO = toISOFromDatetimeLocal(form.start_time);
     const endISO = toISOFromDatetimeLocal(form.end_time);
@@ -110,7 +135,7 @@ export default function OwnerClassesTab() {
     try {
       await createSlot({
         studio: studioId,
-        trainer: form.trainer, // keep as string; backend might require it
+        trainer: form.trainer, // optional string uuid
         title: form.title,
         start_time: startISO,
         end_time: endISO,
@@ -135,9 +160,15 @@ export default function OwnerClassesTab() {
       )}
 
       <div className="rounded-2xl bg-white border border-gray-100 shadow-sm p-6">
-        <div className="text-xs uppercase tracking-widest text-gray-500">Owner</div>
-        <h3 className="text-2xl font-extrabold text-gray-900 mt-1">Classes & slots</h3>
-        <p className="text-gray-600 mt-2">Create new class sessions (slots) and see bookings.</p>
+        <div className="text-xs uppercase tracking-widest text-gray-500">
+          Owner
+        </div>
+        <h3 className="text-2xl font-extrabold text-gray-900 mt-1">
+          Classes & slots
+        </h3>
+        <p className="text-gray-600 mt-2">
+          Create new class sessions (slots) and see bookings.
+        </p>
 
         {loading ? (
           <div className="mt-6 flex items-center gap-2 text-gray-600">
@@ -161,7 +192,9 @@ export default function OwnerClassesTab() {
 
               <select
                 value={form.trainer}
-                onChange={(e) => setForm((p) => ({ ...p, trainer: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, trainer: e.target.value }))
+                }
                 className="rounded-xl border border-gray-200 px-4 py-3 bg-white"
               >
                 <option value="">No trainer</option>
@@ -176,7 +209,9 @@ export default function OwnerClassesTab() {
 
               <input
                 value={form.title}
-                onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, title: e.target.value }))
+                }
                 placeholder="Class title"
                 className="rounded-xl border border-gray-200 px-4 py-3"
               />
@@ -186,19 +221,25 @@ export default function OwnerClassesTab() {
               <input
                 type="datetime-local"
                 value={form.start_time}
-                onChange={(e) => setForm((p) => ({ ...p, start_time: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, start_time: e.target.value }))
+                }
                 className="rounded-xl border border-gray-200 px-4 py-3"
               />
               <input
                 type="datetime-local"
                 value={form.end_time}
-                onChange={(e) => setForm((p) => ({ ...p, end_time: e.target.value }))}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, end_time: e.target.value }))
+                }
                 className="rounded-xl border border-gray-200 px-4 py-3"
               />
               <div className="flex gap-2">
                 <input
                   value={form.price}
-                  onChange={(e) => setForm((p) => ({ ...p, price: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((p) => ({ ...p, price: e.target.value }))
+                  }
                   placeholder="Price"
                   className="flex-1 rounded-xl border border-gray-200 px-4 py-3"
                 />
@@ -215,7 +256,8 @@ export default function OwnerClassesTab() {
 
             {selectedStudio && (
               <div className="mt-2 text-xs text-gray-500">
-                Studio UUID: <span className="font-mono">{selectedStudio.uuid}</span>
+                Studio UUID:{" "}
+                <span className="font-mono">{selectedStudio.uuid}</span>
               </div>
             )}
 
@@ -225,15 +267,42 @@ export default function OwnerClassesTab() {
                 <div className="text-sm text-gray-500 mt-3">No slots yet.</div>
               ) : (
                 <div className="mt-3 space-y-2">
-                  {slots.slice(0, 12).map((s) => (
-                    <div key={s.uuid} className="rounded-xl border border-gray-200 p-4">
-                      <div className="font-bold text-gray-900">{s.title ?? "Slot"}</div>
-                      <div className="text-sm text-gray-600 mt-1">
-                        {formatDT(s.start_time)} → {formatDT(s.end_time)}
-                        {s.price ? ` • $${s.price}` : ""}
+                  {slots.slice(0, 12).map((s: any) => {
+                    const tr =
+                      (s.trainer_details &&
+                        (s.trainer_details.first_name ||
+                          s.trainer_details.last_name ||
+                          s.trainer_details.username))
+                        ? s.trainer_details
+                        : s.trainer
+                        ? trainerById[s.trainer]
+                        : null;
+
+                    const trName = tr
+                      ? `${tr.first_name ?? ""} ${tr.last_name ?? ""}`.trim() ||
+                        tr.username ||
+                        "—"
+                      : "—";
+
+                    return (
+                      <div
+                        key={s.uuid}
+                        className="rounded-xl border border-gray-200 p-4"
+                      >
+                        <div className="font-bold text-gray-900">
+                          {s.title ?? "Slot"}
+                        </div>
+                        <div className="text-sm text-gray-600 mt-1">
+                          {formatDT(s.start_time)} → {formatDT(s.end_time)}
+                          {s.price ? ` • $${s.price}` : ""}
+                        </div>
+                        <div className="text-sm text-gray-700 mt-1">
+                          <span className="font-semibold">Trainer:</span>{" "}
+                          {trName}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -241,13 +310,22 @@ export default function OwnerClassesTab() {
             <div className="mt-10">
               <div className="font-extrabold text-gray-900">Bookings</div>
               {bookings.length === 0 ? (
-                <div className="text-sm text-gray-500 mt-3">No bookings yet.</div>
+                <div className="text-sm text-gray-500 mt-3">
+                  No bookings yet.
+                </div>
               ) : (
                 <div className="mt-3 space-y-2">
                   {bookings.slice(0, 12).map((b) => (
-                    <div key={b.uuid} className="rounded-xl border border-gray-200 p-4">
-                      <div className="font-bold text-gray-900">Booking {b.uuid.slice(0, 8)}…</div>
-                      <div className="text-sm text-gray-600 mt-1">Status: {b.status ?? "—"}</div>
+                    <div
+                      key={b.uuid}
+                      className="rounded-xl border border-gray-200 p-4"
+                    >
+                      <div className="font-bold text-gray-900">
+                        Booking {b.uuid.slice(0, 8)}…
+                      </div>
+                      <div className="text-sm text-gray-600 mt-1">
+                        Status: {b.status ?? "—"}
+                      </div>
                     </div>
                   ))}
                 </div>

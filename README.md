@@ -80,8 +80,6 @@ packages/ # shared packages (if added later)
 
 ## 🐳 Docker Setup (Recommended)
 
-> If your teacher prefers Docker, this is the best solution.
-> If you don’t have Docker configured yet, see the "Local Development" section below.
 
 ### 1) Build containers
 ```bash

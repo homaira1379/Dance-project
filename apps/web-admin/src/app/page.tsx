@@ -1,45 +1,93 @@
-import React from "react";
+// apps/web-admin/src/app/page.tsx
+"use client";
 
-import { Navigation } from "../components/Navigation";
-import { Hero } from "../components/Hero";
-import { JoinCTA } from "../components/JoinCTA";
-import { About } from "../components/About";
-import { Classes } from "../components/Classes";
-import { Schedule } from "../components/Schedule";
-import { Instructors } from "../components/Instructors";
-import { BookingRequest } from "../components/BookingRequest";
-import { Contact } from "../components/Contact";
+import React, { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+import { HomeSearch } from "../components/HomeSearch";
+import { AuthModal } from "../components/AuthModal"; // ✅ named import
+
+import { useAuthUser } from "../lib/useAuthUser";
+import { signOut } from "../lib/auth";
 
 export default function Page() {
+  const router = useRouter();
+  const { user, role, loading } = useAuthUser();
+
+  const [loginOpen, setLoginOpen] = useState(false);
+
+  const handleLogout = async () => {
+    await signOut();
+    router.refresh();
+  };
+
+  const dashboardHref =
+    role === "owner"
+      ? "/dashboard/owner"
+      : role === "instructor"
+      ? "/dashboard/instructor"
+      : "/dashboard/student";
+
   return (
     <div className="min-h-screen bg-page text-slate-900">
-      <div id="top" />
+      {/* Public Top Bar */}
+      <div className="fixed top-0 left-0 right-0 z-50">
+        <div className="mx-auto max-w-7xl px-4 py-4">
+          <div className="flex items-center justify-between">
+            <Link
+              href="/"
+              className="flex items-center gap-2 text-white font-extrabold"
+            >
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 border border-white/20">
+                DL
+              </span>
+              <span>DanceLink</span>
+            </Link>
 
-      <Navigation />
-      <Hero />
-      <JoinCTA />
+            <div className="flex items-center gap-3">
+              {loading ? (
+                <div className="text-white/80 text-sm">Loading…</div>
+              ) : user ? (
+                <>
+                  <Link
+                    href={dashboardHref}
+                    className="rounded-xl bg-white/10 border border-white/20 px-4 py-2 text-sm font-semibold text-white hover:bg-white/15"
+                  >
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="rounded-xl bg-orange-500 px-4 py-2 text-sm font-extrabold text-white hover:bg-orange-600"
+                  >
+                    Sign out
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setLoginOpen(true)}
+                  className="rounded-xl bg-orange-500 px-4 py-2 text-sm font-extrabold text-white hover:bg-orange-600"
+                >
+                  Log in
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <section id="about" className="py-20">
-        <About />
-      </section>
+      {/* Push content below fixed header */}
+      <div className="pt-16">
+        <HomeSearch />
+      </div>
 
-      <section id="classes" className="py-20 bg-[#FAFAFA]">
-        <Classes />
-      </section>
-
-      <section id="schedule" className="py-20">
-        <Schedule />
-      </section>
-
-      <section id="instructors" className="py-20 bg-[#FAFAFA]">
-        <Instructors />
-      </section>
-
-      <BookingRequest />
-
-      <section id="contact">
-        <Contact />
-      </section>
+      {/* Login Modal */}
+      <AuthModal
+        isOpen={loginOpen}
+        onClose={() => setLoginOpen(false)}
+        initialMode="signin"
+        initialRole="student"
+      />
     </div>
   );
 }

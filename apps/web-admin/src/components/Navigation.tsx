@@ -58,16 +58,12 @@ export function Navigation() {
       setIsMobileMenuOpen(false);
     };
     window.addEventListener("open-auth", handler as EventListener);
-    return () => window.removeEventListener("open-auth", handler as EventListener);
+    return () =>
+      window.removeEventListener("open-auth", handler as EventListener);
   }, []);
 
-  const navItems = [
-    { label: "About", href: "#about" },
-    { label: "Classes", href: "#classes" },
-    { label: "Schedule", href: "#schedule" },
-    { label: "Instructors", href: "#instructors" },
-    { label: "Contact", href: "#contact" },
-  ];
+  // ✅ DELETE About + Contact from navbar completely
+  const navItems: { label: string; href: string }[] = [];
 
   const openAuthModal = (mode: "signin" | "signup", initialRole?: UserRole) => {
     setAuthMode(mode);
@@ -94,7 +90,7 @@ export function Navigation() {
       .map((p) => p[0])
       .join("")
       .slice(0, 2)
-      .toUpperCase() || (user?.email ? user.email[0]?.toUpperCase() : "");
+      .toUpperCase() || (user?.email ? user.email[0]?.toUpperCase() : "U");
 
   const linkClass = `transition-colors hover:text-orange-500 ${
     isScrolled ? "text-gray-700" : "text-white"
@@ -116,32 +112,39 @@ export function Navigation() {
             }}
             className="flex items-center space-x-2"
           >
-            <div className={`transition-colors ${isScrolled ? "text-orange-500" : "text-white"}`}>
-              <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <div
+              className={`transition-colors ${
+                isScrolled ? "text-orange-500" : "text-white"
+              }`}
+            >
+              <svg
+                className="w-8 h-8"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="M12 2L2 7l10 5 10-5-10-5z" />
                 <path d="M2 17l10 5 10-5M2 12l10 5 10-5" />
               </svg>
             </div>
-            <span className={`transition-colors font-semibold ${isScrolled ? "text-gray-900" : "text-white"}`}>
-              Dance<span className={`${isScrolled ? "text-orange-500" : "text-orange-400"}`}>Link</span>
+            <span
+              className={`transition-colors font-semibold ${
+                isScrolled ? "text-gray-900" : "text-white"
+              }`}
+            >
+              Dance
+              <span
+                className={`${isScrolled ? "text-orange-500" : "text-orange-400"}`}
+              >
+                Link
+              </span>
             </span>
           </a>
 
-          {/* Desktop Navigation */}
+          {/* Desktop */}
           <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                onClick={(e) => {
-                  e.preventDefault();
-                  scrollToId(item.href);
-                }}
-                className={linkClass}
-              >
-                {item.label}
-              </a>
-            ))}
+            {/* navItems intentionally empty now */}
 
             {!loading && user ? (
               <>
@@ -161,12 +164,20 @@ export function Navigation() {
                           : "bg-white/20 text-white border-white/40"
                       }`}
                     >
-                      {initials || "U"}
+                      {initials}
                     </div>
 
-                    <div className={`${isScrolled ? "text-gray-800" : "text-white"} leading-tight text-left`}>
-                      <div className="text-sm font-semibold">{fullName || user.email || "Signed in"}</div>
-                      {role && <div className="text-xs opacity-75 capitalize">{role}</div>}
+                    <div
+                      className={`${
+                        isScrolled ? "text-gray-800" : "text-white"
+                      } leading-tight text-left`}
+                    >
+                      <div className="text-sm font-semibold">
+                        {fullName || user.email || "Signed in"}
+                      </div>
+                      {role && (
+                        <div className="text-xs opacity-75 capitalize">{role}</div>
+                      )}
                     </div>
                   </button>
 
@@ -194,7 +205,10 @@ export function Navigation() {
               </>
             ) : (
               <>
-                <button onClick={() => openAuthModal("signin")} className={linkClass}>
+                <button
+                  onClick={() => openAuthModal("signin")}
+                  className={linkClass}
+                >
                   Sign In
                 </button>
                 <button
@@ -210,7 +224,10 @@ export function Navigation() {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className={`md:hidden transition-colors ${isScrolled ? "text-gray-900" : "text-white"}`}
+            className={`md:hidden transition-colors ${
+              isScrolled ? "text-gray-900" : "text-white"
+            }`}
+            aria-label="Toggle menu"
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
@@ -221,20 +238,7 @@ export function Navigation() {
       {isMobileMenuOpen && (
         <div className="md:hidden bg-white border-t">
           <div className="px-4 py-4 space-y-3">
-            {navItems.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className="block text-gray-700 hover:text-orange-600 py-2"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setIsMobileMenuOpen(false);
-                  scrollToId(item.href);
-                }}
-              >
-                {item.label}
-              </a>
-            ))}
+            {/* navItems intentionally empty now */}
 
             {!loading && user ? (
               <>

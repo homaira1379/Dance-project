@@ -10,15 +10,20 @@ export function DashboardNav() {
   const pathname = usePathname();
   const router = useRouter();
 
-  const isActive = (href: string) =>
-    pathname === href || pathname.startsWith(href + "/");
+  const isActive = (href: string) => {
+    // ignore query string, Next pathname does not include it
+    if (href.includes("?")) {
+      const [base] = href.split("?");
+      return pathname === base;
+    }
+    return pathname === href || pathname.startsWith(href + "/");
+  };
 
   const handleSignOut = async () => {
     await signOut();
     router.replace("/");
   };
 
-  // While auth loads
   if (loading) {
     return (
       <div className="w-full border-b border-slate-200 bg-white">
@@ -29,15 +34,14 @@ export function DashboardNav() {
     );
   }
 
-  // If not logged in, don’t show dashboard nav
   if (!user) return null;
 
-  // Menus per role
   const items =
     role === "owner"
       ? [
-          { label: "Overview", href: "/dashboard/owner" },
-          { label: "Instructors", href: "/dashboard/owner/instructors" },
+          { label: "Studios", href: "/dashboard/owner" },
+          { label: "Trainers", href: "/dashboard/owner/instructors" },
+          { label: "Classes & Slots", href: "/dashboard/owner/classes" },
           { label: "Profile", href: "/profile" },
         ]
       : role === "instructor"
@@ -47,7 +51,6 @@ export function DashboardNav() {
         ]
       : [
           { label: "Home", href: "/dashboard/student" },
-          { label: "Map", href: "/dashboard/student?tab=map" },
           { label: "Profile", href: "/profile" },
         ];
 

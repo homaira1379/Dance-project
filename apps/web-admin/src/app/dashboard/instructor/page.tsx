@@ -17,6 +17,12 @@ import {
   DialogTitle,
 } from "../../../components/ui/dialog";
 
+function roleToDashboard(role: "owner" | "instructor" | "student" | null) {
+  if (role === "owner") return "/dashboard/owner";
+  if (role === "instructor") return "/dashboard/instructor";
+  return "/dashboard/student";
+}
+
 export default function InstructorDashboardPage() {
   const router = useRouter();
   const { user, role, loading } = useAuthUser();
@@ -27,7 +33,7 @@ export default function InstructorDashboardPage() {
   const [slotsLoading, setSlotsLoading] = useState(true);
   const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
 
-  // ✅ Hard guard
+  // ✅ Guard: must be logged in AND must be instructor
   useEffect(() => {
     if (loading) return;
 
@@ -37,7 +43,8 @@ export default function InstructorDashboardPage() {
     }
 
     if (role && role !== "instructor") {
-      router.replace("/dashboard");
+      router.replace(roleToDashboard(role));
+      return;
     }
   }, [user, role, loading, router]);
 
@@ -99,7 +106,11 @@ export default function InstructorDashboardPage() {
     );
   }
 
+  // if not logged in, guard will redirect
   if (!user) return null;
+
+  // If logged in but role not resolved yet, avoid flash
+  if (role && role !== "instructor") return null;
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50">
@@ -142,24 +153,9 @@ export default function InstructorDashboardPage() {
 
           <section className="mt-10 grid gap-4 sm:grid-cols-3">
             {[
-              {
-                icon: <Clock3 size={20} />,
-                label: "Next class",
-                value: stats.nextClass,
-                tone: "from-emerald-500/10 to-teal-500/5",
-              },
-              {
-                icon: <Flame size={20} />,
-                label: "Booked seats",
-                value: stats.booked,
-                tone: "from-orange-500/10 to-amber-500/5",
-              },
-              {
-                icon: <CalendarCheck2 size={20} />,
-                label: "Upcoming sessions",
-                value: `${stats.upcomingCount}`,
-                tone: "from-indigo-500/10 to-slate-500/5",
-              },
+              { icon: <Clock3 size={20} />, label: "Next class", value: stats.nextClass, tone: "from-emerald-500/10 to-teal-500/5" },
+              { icon: <Flame size={20} />, label: "Booked seats", value: stats.booked, tone: "from-orange-500/10 to-amber-500/5" },
+              { icon: <CalendarCheck2 size={20} />, label: "Upcoming sessions", value: `${stats.upcomingCount}`, tone: "from-indigo-500/10 to-slate-500/5" },
             ].map((item) => (
               <div
                 key={item.label}
@@ -193,11 +189,7 @@ export default function InstructorDashboardPage() {
               <h2 className="text-2xl font-bold text-slate-900">Upcoming Classes</h2>
               <p className="text-sm text-slate-500 mb-4">Everything you need to prepare.</p>
 
-              <ClassList
-                refreshTrigger={refreshTrigger}
-                filter="upcoming"
-                onViewRoster={setSelectedClassId}
-              />
+              <ClassList refreshTrigger={refreshTrigger} filter="upcoming" onViewRoster={setSelectedClassId} />
             </div>
 
             <div>
@@ -205,11 +197,7 @@ export default function InstructorDashboardPage() {
               <h2 className="text-2xl font-bold text-slate-900">Past Classes</h2>
               <p className="text-sm text-slate-500 mb-4">Review outcomes and attendance.</p>
 
-              <ClassList
-                refreshTrigger={refreshTrigger}
-                filter="past"
-                onViewRoster={setSelectedClassId}
-              />
+              <ClassList refreshTrigger={refreshTrigger} filter="past" onViewRoster={setSelectedClassId} />
             </div>
           </section>
 

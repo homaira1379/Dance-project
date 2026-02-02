@@ -15,7 +15,12 @@ export default function OwnerStudiosTab() {
       setError(null);
       try {
         const data = await myStudios();
-        setStudios(data);
+
+console.log("OWNER STUDIOS DATA:", data);
+console.log("FIRST STUDIO:", data?.[0]);
+
+setStudios(data);
+
       } catch (e: any) {
         setError(e?.message || "Failed to load studios.");
       } finally {

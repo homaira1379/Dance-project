@@ -1,19 +1,19 @@
-'use client';
+"use client";
 
-import { api } from "./api";
+import { apiFetch } from "./apiFetch";
 
 export type DanceStyle = {
   uuid: string;
   name: string;
-  description?: string;
+  code?: string | null;
+  description?: string | null;
+  is_active?: boolean;
 };
 
-export async function fetchDanceStyles() {
-  const res = await api.get("/studios/dance-styles/");
-  if (Array.isArray(res.data)) {
-    return res.data as DanceStyle[];
-  } else if (res.data && Array.isArray((res.data as any).results)) {
-    return (res.data as any).results as DanceStyle[];
-  }
+export async function fetchDanceStyles(): Promise<DanceStyle[]> {
+  const data = await apiFetch<any>(`/studios/dance-styles/`, { method: "GET" });
+
+  if (Array.isArray(data)) return data;
+  if (data && Array.isArray(data.results)) return data.results;
   return [];
 }

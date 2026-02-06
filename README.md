@@ -1,151 +1,252 @@
-# DanceLink (DanceCRM)
+DanceLink (DanceCRM)
 
-DanceLink is a role-based platform for dance studios where:
-- **Students** search and book dance classes.
-- **Studio Owners (Studio Admins)** manage studios, trainers, and class slots.
-- **Main Admin** (optional / future) can manage the whole system.
+DanceLink is a role-based web platform designed for dance studios to manage classes, trainers, and bookings.
 
-This repository is a **monorepo** (multiple apps in one repo).
+The system allows different types of users to interact with the platform based on their roles.
 
----
+📌 Project Overview
 
-## 🧩 Project Structure
+DanceLink provides:
 
+Public class browsing and searching
+
+Booking management for students
+
+Studio and trainer management for owners
+
+Role-based dashboards
+
+This project is built using Next.js and follows a monorepo structure.
+
+🧩 Project Structure
 mobile-main1/
-apps/
-web-admin/ # Next.js web app (public site + dashboards)
-packages/ # shared packages (if added later)
+│
+├── apps/
+│   └── web-admin/        # Main Next.js web application
+│
+├── packages/             # Shared packages (optional / future)
+│
+└── README.md
 
 
-> The main web application lives in: `apps/web-admin`
+👉 Main application location:
 
----
+apps/web-admin
 
-## 👥 Roles & Permissions
+👥 User Roles & Permissions
+✅ Student (User)
 
-### ✅ Student (user)
-- Browse/search classes
-- Book classes / view bookings
-- Manage own profile
+Students can:
 
-### ✅ Instructor / Trainer
-- View assigned classes
-- Manage own teaching schedule (depends on backend support)
+Browse and search dance classes
 
-### ✅ Studio Owner (studio admin)
-- Manage **owned studios**
-- Manage **trainers**
-- Create/manage **classes & slots**
-- View bookings related to owned studios
+Book available classes
 
-### ✅ Main Admin (future / optional)
-- Manage all studios and all users
-- Global settings and moderation
+Manage their profile
 
----
+View bookings
 
-## 🗺️ Main Pages
+✅ Instructor / Trainer
 
-### Public pages (no login required)
-- `/` → **Home / Search Classes**
-  - Search by title, studio, trainer, city, date, style, price, availability.
-  - Login/Signup button available in header.
+Trainers can:
 
-### Auth / Account
-- Login/Signup opens via modal on home page
-- `/profile` → user profile page (when logged in)
-- `/reset` → password reset flow (if configured)
+View assigned classes
 
-### Dashboards (login required)
-- `/dashboard` → Redirects user to correct dashboard based on role
-- `/dashboard/student` → Student dashboard (bookings, search, map tab)
-- `/dashboard/instructor` → Instructor dashboard (classes assigned)
-- `/dashboard/owner` → Owner dashboard tabs:
-  - **Studios**
-  - **Trainers**
-  - **Classes & Slots**
+Manage teaching schedule (if enabled by backend)
 
----
+Track student participation
 
-## ✅ Requirements
+✅ Studio Owner (Studio Admin)
 
-### Option A (recommended): Docker
-- Docker Desktop installed
+Studio owners can:
 
-### Option B: Local development
-- **Node.js 18+**
-- npm (or pnpm / yarn)
+Manage studios they own
 
-💻 Local Development 
-1) Install dependencies (root)
-From repo root:
+Manage trainers
+
+Create and manage classes and time slots
+
+View bookings related to their studios
+
+✅ Main Admin (Future Extension)
+
+Main admin may:
+
+Manage all studios and users
+
+Configure global settings
+
+Monitor platform analytics
+
+🗺️ Main Application Pages
+🌍 Public Pages (No Login Required)
+/
+
+Home page where users can:
+
+Search classes by:
+
+Title
+
+Studio
+
+Trainer
+
+City
+
+Date
+
+Style
+
+Price
+
+Availability
+
+Open Login / Signup modal
+
+🔐 Authentication & Account Pages
+Page	Description
+Login Modal	Used for sign in & sign up
+/profile	User profile management
+/reset	Password reset page
+📊 Dashboards (Login Required)
+/dashboard
+
+Redirects user automatically based on role.
+
+/dashboard/student
+
+Student dashboard includes:
+
+Bookings
+
+Class search
+
+Map view
+
+/dashboard/instructor
+
+Trainer dashboard includes:
+
+Assigned classes
+
+Schedule management
+
+/dashboard/owner
+
+Owner dashboard contains tabs:
+
+Studios
+
+Trainers
+
+Classes & Slots
+
+⚙️ Requirements
+
+Before running the project, install:
+
+Node.js (version 18 or higher)
+
+npm (comes with Node.js)
+
+💻 Installation & Setup
+1️⃣ Clone Repository
+git clone https://github.com/YOUR_USERNAME/YOUR_REPOSITORY.git
+cd mobile-main1
+
+2️⃣ Install Dependencies
+
+From project root:
 
 npm install
-2) Run web app (Next.js)
-Go into web app folder:
+
+3️⃣ Run Web Application
+
+Navigate to web application folder:
 
 cd apps/web-admin
 npm install
 npm run dev
-Open:
 
+4️⃣ Open Application
 http://localhost:3000
 
-🏗️ Build for Production
-Build
+🏗️ Build & Run Production
+Build Application
 cd apps/web-admin
 npm run build
-Run production server
+
+Start Production Server
 npm run start
+
 📜 Available Scripts
+
 Inside apps/web-admin:
 
 Script	Description
-npm run dev	Run development server
-npm run build	Build for production
-npm run start	Run production server
-npm run lint	Run lint checks (if configured)
-If npm run dev fails in the repo root, run it inside apps/web-admin.
+npm run dev	Start development server
+npm run build	Build application
+npm run start	Run production build
+npm run lint	Run linting
+
+⚠️ Important:
+If npm run dev does not work from root folder, run it inside:
+
+apps/web-admin
 
 🔐 Environment Variables
-Create an .env.local inside:
+
+Create file:
 
 apps/web-admin/.env.local
-Example (update values based on your backend):
+
+
+Example:
 
 NEXT_PUBLIC_API_URL=http://localhost:8000
-🧠 Notes (Important)
-Home page (/) is public for students browsing classes
 
-Dashboards require login and role-based access
 
-Owner and instructor pages should not be accessible without authentication
+Update API URL according to backend server.
 
-✅ Future Improvements
+🧠 Technical Stack
+
+Next.js
+
+React
+
+TypeScript
+
+Tailwind CSS
+
+Role-based Authentication
+
+REST API Integration
+
+🚀 Future Improvements
+
 Main admin dashboard
 
-Better analytics for owners
+Payment integration
 
-Booking confirmation + notifications
+Notification system
 
-Payments integration
+Advanced analytics for studio owners
 
-Deployment pipeline
+Mobile application expansion
+
+🎓 Project Purpose
+
+This project is developed for educational purposes and demonstrates:
+
+Full-stack web development
+
+Role-based UI and access control
+
+Modern React & Next.js architecture
+
+Real-world booking system design
 
 📄 License
-For educational use / university project.
 
-
----
-
-### Two important things:
-1) If you want Docker to be *real*, you need `docker-compose.yml`.  
-If you tell me what backend you use (FastAPI? Django? Node?) + database (Postgres?), I can write the full Docker files.
-
-2) You mentioned you got error `"Missing script: dev"` when running from root.  
-This README already explains: **run scripts inside `apps/web-admin`**.
-
-If you want, paste your **root `package.json`** and I’ll adjust the README scripts to match exactly your repo.
-::contentReference[oaicite:0]{index=0}
-You said:
-
+Educational / University Project Use Only

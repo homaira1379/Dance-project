@@ -76,24 +76,7 @@ packages/ # shared packages (if added later)
 - **Node.js 18+**
 - npm (or pnpm / yarn)
 
----
-
-## 🐳 Docker Setup (Recommended)
-
-
-### 1) Build containers
-```bash
-docker compose build
-2) Run
-docker compose up
-3) Open app
-Web: http://localhost:3000
-
-4) Stop
-docker compose down
-If you don’t have a docker-compose.yml yet, tell me and I’ll generate it for your project (web + backend + database).
-
-💻 Local Development (No Docker)
+💻 Local Development 
 1) Install dependencies (root)
 From repo root:
 
